@@ -1,0 +1,32 @@
+The game will be the card game Blackjack, played via user input in a terminal.
+
+There will be a dealer and a single user.
+At each decision point in the game, the user will be asked to input their choice of these, depending on the hand:
+    - Stand
+    - Hit
+    - Split
+    - Double
+    - Surrender?
+
+Questions:
+    How much money to start with?
+        1000
+    Does the user play for a set number of rounds? Or can they leave the table at any time?
+        Set number of rounds
+    Can the user surrender?
+        No
+    One deck or two?
+        One deck
+    How often to shuffle?
+        Each round
+
+Crucial Logic:
+    Must have a list of cards in a deck (or two). Remove them as they get drawn.
+    After each round, display current points and round number.
+
+Steps:
+Begin with a set amount of money/points.
+Player places bet (must be < current points)
+Dealer draws a random card for the user, one for himself (which is shown), another for the user, and another for himself (which is hidden).
+Player inputs their choice.
+If their total is not over 21, player inputs their choice again.
