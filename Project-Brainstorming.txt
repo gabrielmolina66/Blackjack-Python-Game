@@ -1,5 +1,8 @@
 The game will be the card game Blackjack, played via user input in a terminal.
 
+To-Do:
+    - get sum of hand even when face cards are involved
+
 There will be a dealer and a single user.
 At each decision point in the game, the user will be asked to input their choice of these, depending on the hand:
     - Stand
@@ -19,6 +22,7 @@ Questions:
         One deck
     How often to shuffle?
         Each round
+    
 
 Crucial Logic:
     Must have a list of cards in a deck (or two). Remove them as they get drawn.
@@ -38,9 +42,9 @@ What I would like to display to the terminal:
 
 Welcome to the Blackjack table!
 You will start with 1000 points.
-How many rounds would you like to play? (user input)
+You can leave the table and take your winnings (or cut your losses)
 
-Place your bet for round 1: (user input)
+Type "leave" or place your bet for round 1: (user input)
 
 You were dealt a (card 1) and a (card 2)
 You can (options depending on hand). What's your move? (user input)
