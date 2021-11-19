@@ -33,8 +33,26 @@ class Dealer(Player):
 
 current_round = 0
 
-##### figure how to get an accurate sum
-sum_of_hand = 22
+
+def get_sum_of_hand(current_hand):
+    hand_values = []
+    aces = 0
+    for card in current_hand:
+        if card == 'J' or card == 'Q' or card == 'K':
+            hand_values.append(10)
+        elif card == 'A':
+            aces += 1
+        else:
+            hand_values.append(card)
+    while aces > 0:
+        if sum(hand_values) <= 10:
+            hand_values.append(11)
+            aces -= 1
+        else:
+            hand_values.append(1)
+            aces -= 1
+    global sum_of_hand
+    sum_of_hand = sum(hand_values)
 
 
 def deal():
@@ -47,13 +65,15 @@ def deal():
 
 def get_choices():
     global choices
-    choices = ["Hit", "Stand", "Double"]
     if (type(player.current_hand[0]) == str) and (type(player.current_hand[1]) == str):
-        choices.append("Split")
+        choices = ["Stand", "Hit", "Double", "Split"]
+    else:
+        choices = ["Stand", "Hit", "Double"]
     
 def make_move(input):
     global choices
     global current_bet
+    global sum_of_hand
     if input.title() not in choices:
         print("You're not allowed to choose that with your current hand.")
     if input.lower() == "hit":
@@ -78,6 +98,7 @@ def make_move(input):
 def new_round():
     global choices
     global current_round
+    global sum_of_hand
     current_round += 1
     print()
     global current_bet
@@ -102,6 +123,7 @@ def new_round():
     global player_move
     player_move = input("What's your move? ")
     make_move(player_move)
+    get_sum_of_hand(player.current_hand)
     if sum_of_hand < 21:
         get_choices()
         print()
@@ -111,14 +133,8 @@ def new_round():
         make_move(player_move)
 
 
-
-
 dealer = Dealer()
 player = Player()
-
-
-
-
 
 # Start game
 def play_game():
@@ -132,4 +148,12 @@ def play_game():
     new_round()
 
 
-play_game()
+# Space to test stuff:
+
+
+
+
+
+
+
+# play_game()

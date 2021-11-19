@@ -12,7 +12,6 @@ At each decision point in the game, the user will be asked to input their choice
     - Hit
     - Split
     - Double
-    - Surrender?
 
 Questions:
     How much money to start with?
