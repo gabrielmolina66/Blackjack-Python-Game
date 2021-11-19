@@ -12,7 +12,7 @@ Questions:
     How much money to start with?
         1000
     Does the user play for a set number of rounds? Or can they leave the table at any time?
-        Set number of rounds
+        Leave at any time
     Can the user surrender?
         No
     One deck or two?
@@ -30,3 +30,34 @@ Player places bet (must be < current points)
 Dealer draws a random card for the user, one for himself (which is shown), another for the user, and another for himself (which is hidden).
 Player inputs their choice.
 If their total is not over 21, player inputs their choice again.
+When the player's turn is over, the dealer reveals his second card. If total is under 17, must hit.
+
+
+
+What I would like to display to the terminal:
+
+Welcome to the Blackjack table!
+You will start with 1000 points.
+How many rounds would you like to play? (user input)
+
+Place your bet for round 1: (user input)
+
+You were dealt a (card 1) and a (card 2)
+You can (options depending on hand). What's your move? (user input)
+
+    (if hit and still under 21)
+    You were dealt a (card 3).
+    Your current hand is now a (card 1), a (card 2), and a (card 3).
+    You can (options). What's your move?
+
+    (if hit and equal 21)
+    You were dealt a (card 3).
+    Your current hand is now a (card 1), a (card 2), and a (card 3).
+    You got blackjack!
+
+    (if hit and over 21)
+    You were dealt a (card 3).
+    Your current hand is now a (card 1), a (card 2), and a (card 3).
+    Bust!
+
+The dealer got to 
