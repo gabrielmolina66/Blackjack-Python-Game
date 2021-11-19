@@ -24,7 +24,8 @@ class Player:
         pass
 
     def double(self):
-        pass
+        global current_bet
+        current_bet *= 2
 
 class Dealer(Player):
     def __init__(self):
@@ -32,6 +33,8 @@ class Dealer(Player):
 
 current_round = 0
 
+##### figure how to get an accurate sum
+sum_of_hand = 22
 
 
 def deal():
@@ -48,13 +51,38 @@ def get_choices():
     if (type(player.current_hand[0]) == str) and (type(player.current_hand[1]) == str):
         choices.append("Split")
     
+def make_move(input):
+    global choices
+    global current_bet
+    if input.title() not in choices:
+        print("You're not allowed to choose that with your current hand.")
+    if input.lower() == "hit":
+        print()
+        player.hit()
+        print("You were dealt a {new}. Your current hand is ".format(new=player.current_hand[-1]) + str(player.current_hand))
+        if sum_of_hand > 21:
+            print("Bust!")
+            player.current_points -= current_bet
+            print()
+            print("Since you're curious, the dealer's full hand was " + str(dealer.current_hand))
+            return
+    elif input.lower() == "stand":
+        return
+    elif input.lower() == "double":
+        player.double()
+        player.hit()
+        print()
+        print("You doubled your bet to {bet} and were dealt a {new}. Your current hand is ".format(bet=current_bet, new=player.current_hand[-1]) + str(player.current_hand))
+
 
 def new_round():
+    global choices
     global current_round
     current_round += 1
     print()
+    global current_bet
     current_bet = input("Type \"Leave\", or place your bet for round {num}: ".format(num=current_round))
-    if current_bet == "leave" or current_bet == "Leave":
+    if current_bet.lower() == "leave":
         print()
         print("You finished with {num} points!".format(
             num=player.current_points))
@@ -63,14 +91,26 @@ def new_round():
         print()
         print("You can't bet more than you have! (It's for your own good.)")
         ##### Find a way to return to input here
+    else:
+        current_bet = int(current_bet)
     print()
     deal()
     get_choices()
     print()
     print("You can: " + str(choices))
     print()
+    global player_move
     player_move = input("What's your move? ")
-    
+    make_move(player_move)
+    if sum_of_hand < 21:
+        get_choices()
+        print()
+        print("You can: " + str(choices))
+        print()
+        player_move = input("What's your move? ")
+        make_move(player_move)
+
+
 
 
 dealer = Dealer()
