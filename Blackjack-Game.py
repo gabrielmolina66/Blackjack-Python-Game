@@ -57,15 +57,12 @@ global face_cards
 face_cards = ['K', 'Q', 'J', 10]
 
 
-
-
-
 def deal():
     player.hit()
     dealer.hit()
     player.hit()
     dealer.hit()
-    print("You were dealt a {first} and a {second}.".format(first=player.current_hand[0], second=player.current_hand[1]))
+    print("You were dealt a {first} and a {second}".format(first=player.current_hand[0], second=player.current_hand[1]) + ", totalling to " + str(player.get_sum_of_hand(player.current_hand)) + ".")
     print("The dealer shows a {first}.".format(first=dealer.current_hand[0]))
 
 def get_choices():
@@ -92,7 +89,7 @@ def make_move(user_input):
     if user_input.lower() == "hit":
         print()
         player.hit()
-        print("You were dealt a {new}. Your current hand is ".format(new=player.current_hand[-1]) + str(player.current_hand))
+        print("You were dealt a {new}. Your current hand is ".format(bet=current_bet, new=player.current_hand[-1]) + str(player.current_hand) + ", totalling to " + str(player.get_sum_of_hand(player.current_hand)) + ".")
         player.get_sum_of_hand(player.current_hand)
         if player.sum_of_hand > 21:
             print()
@@ -102,14 +99,23 @@ def make_move(user_input):
             print("The dealer's hand was " + str(dealer.current_hand))
             return
     elif user_input.lower() == "stand":
+        player.get_sum_of_hand(player.current_hand)
         dealer_play()
-        # compare_to_dealer()
+        compare_to_dealer()
         return
     elif user_input.lower() == "double":
         player.double()
         player.hit()
         print()
-        print("You doubled your bet to {bet} and were dealt a {new}. Your current hand is ".format(bet=current_bet, new=player.current_hand[-1]) + str(player.current_hand))
+        print("You doubled your bet to {bet} and were dealt a {new}. Your current hand is ".format(bet=current_bet, new=player.current_hand[-1]) + str(player.current_hand) + ", totalling to " + str(player.get_sum_of_hand(player.current_hand)) + ".")
+        # reused code from above :(
+        if player.sum_of_hand > 21:
+            print()
+            print("Bust!")
+            player.current_points -= current_bet
+            print()
+            print("The dealer's hand was: " + str(dealer.current_hand) + ", totalling to " + str(dealer.sum_of_hand) + ".")
+            return
 
 def dealer_play():
     dealer_sum = dealer.get_sum_of_hand(dealer.current_hand)
@@ -119,9 +125,24 @@ def dealer_play():
     elif dealer_sum >= 17 and dealer_sum <= 21:
         dealer.stand()
         dealer.get_sum_of_hand(dealer.current_hand)
+    elif dealer_sum > 21:
+        print("The dealer busted!")
+        player.current_points += current_bet
 
 def compare_to_dealer():
-    pass
+    if dealer.sum_of_hand <= 21:
+        print("The dealer's hand was: " + str(dealer.current_hand) + ", totalling to " + str(dealer.sum_of_hand) + ".")
+        print()
+        if dealer.sum_of_hand > player.sum_of_hand:
+            print("You lose this round!")
+            player.current_points -= current_bet
+        elif dealer.sum_of_hand < player.sum_of_hand:
+            print("You win this round!")
+            player.current_points += current_bet
+        elif dealer.sum_of_hand == player.sum_of_hand:
+            print("It's a push, no points are exchanged.")
+    else:
+        return
 
 
 def leave():
@@ -168,6 +189,7 @@ def new_round():
     print()
     print("----------------------------------------")
     make_move(player_move)
+# HERE LIES THE PROBLEM!!!!!!!!!!!!!!!!
     player.get_sum_of_hand(player.current_hand)
     if player.sum_of_hand <= 21:
         get_choices()
