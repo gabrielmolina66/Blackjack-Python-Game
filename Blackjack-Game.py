@@ -26,6 +26,27 @@ class Player:
     def double(self):
         global current_bet
         current_bet *= 2
+    
+    def get_sum_of_hand(self, current_hand):
+        hand_values = []
+        aces = 0
+        for card in current_hand:
+            if card == 'J' or card == 'Q' or card == 'K':
+                hand_values.append(10)
+            elif card == 'A':
+                aces += 1
+            else:
+                hand_values.append(card)
+        while aces > 0:
+            if sum(hand_values) <= 10:
+                hand_values.append(11)
+                aces -= 1
+            else:
+                hand_values.append(1)
+                aces -= 1
+        # global sum_of_hand
+        self.sum_of_hand = sum(hand_values)
+        return self.sum_of_hand
 
 class Dealer(Player):
     def __init__(self):
@@ -36,25 +57,7 @@ global face_cards
 face_cards = ['K', 'Q', 'J', 10]
 
 
-def get_sum_of_hand(current_hand):
-    hand_values = []
-    aces = 0
-    for card in current_hand:
-        if card == 'J' or card == 'Q' or card == 'K':
-            hand_values.append(10)
-        elif card == 'A':
-            aces += 1
-        else:
-            hand_values.append(card)
-    while aces > 0:
-        if sum(hand_values) <= 10:
-            hand_values.append(11)
-            aces -= 1
-        else:
-            hand_values.append(1)
-            aces -= 1
-    global sum_of_hand
-    sum_of_hand = sum(hand_values)
+
 
 
 def deal():
@@ -77,19 +80,21 @@ def get_choices():
 def make_move(user_input):
     global choices
     global current_bet
-    global sum_of_hand
+    # global sum_of_hand
     if user_input.title() not in choices:
         print()
         print("You're not allowed to choose that with your current hand.")
         new_move = input("What's your move? ")
+        print()
+        print("----------------------------------------")
         make_move(new_move)
     # player choices
     if user_input.lower() == "hit":
         print()
         player.hit()
         print("You were dealt a {new}. Your current hand is ".format(new=player.current_hand[-1]) + str(player.current_hand))
-        get_sum_of_hand(player.current_hand)
-        if sum_of_hand > 21:
+        player.get_sum_of_hand(player.current_hand)
+        if player.sum_of_hand > 21:
             print()
             print("Bust!")
             player.current_points -= current_bet
@@ -97,7 +102,7 @@ def make_move(user_input):
             print("The dealer's hand was " + str(dealer.current_hand))
             return
     elif user_input.lower() == "stand":
-        # dealer_play()
+        dealer_play()
         # compare_to_dealer()
         return
     elif user_input.lower() == "double":
@@ -107,7 +112,17 @@ def make_move(user_input):
         print("You doubled your bet to {bet} and were dealt a {new}. Your current hand is ".format(bet=current_bet, new=player.current_hand[-1]) + str(player.current_hand))
 
 def dealer_play():
+    dealer_sum = dealer.get_sum_of_hand(dealer.current_hand)
+    if dealer_sum < 17:
+        dealer.hit()
+        dealer_play()
+    elif dealer_sum >= 17 and dealer_sum <= 21:
+        dealer.stand()
+        dealer.get_sum_of_hand(dealer.current_hand)
+
+def compare_to_dealer():
     pass
+
 
 def leave():
     print()
@@ -118,17 +133,21 @@ def leave():
 def new_round():
     global choices
     global current_round
-    global sum_of_hand
+    #global sum_of_hand
     current_round += 1
     print()
     if player.current_points == 0:
         print()
         print("You have nothing left to bet!")
         leave()
+    print("----------------------------------------")
+    print()
     print("Your current points balance is: {pts}".format(pts=player.current_points))
     print()
     global current_bet
     current_bet = input("Type \"Leave\", or place your bet for round {num}: ".format(num=current_round))
+    print()
+    print("----------------------------------------")
     if current_bet.lower() == "leave":
         leave()
     elif int(current_bet) > player.current_points:
@@ -146,9 +165,11 @@ def new_round():
     print()
     global player_move
     player_move = input("What's your move? ")
+    print()
+    print("----------------------------------------")
     make_move(player_move)
-    get_sum_of_hand(player.current_hand)
-    if sum_of_hand <= 21:
+    player.get_sum_of_hand(player.current_hand)
+    if player.sum_of_hand <= 21:
         get_choices()
         print()
         print("You can: " + str(choices))
