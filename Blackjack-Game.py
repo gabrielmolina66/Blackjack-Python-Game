@@ -32,6 +32,8 @@ class Dealer(Player):
         self.current_hand = []
 
 current_round = 0
+global face_cards
+face_cards = ['K', 'Q', 'J', 10]
 
 
 def get_sum_of_hand(current_hand):
@@ -65,35 +67,53 @@ def deal():
 
 def get_choices():
     global choices
-    if (type(player.current_hand[0]) == str) and (type(player.current_hand[1]) == str):
+    if len(player.current_hand) == 2 and ((all(card in face_cards for card in player.current_hand)) or (player.current_hand[0] == player.current_hand[1])):
         choices = ["Stand", "Hit", "Double", "Split"]
-    else:
+    elif len(player.current_hand) == 2:
         choices = ["Stand", "Hit", "Double"]
+    else:
+        choices = ["Stand", "Hit"]
     
-def make_move(input):
+def make_move(user_input):
     global choices
     global current_bet
     global sum_of_hand
-    if input.title() not in choices:
+    if user_input.title() not in choices:
+        print()
         print("You're not allowed to choose that with your current hand.")
-    if input.lower() == "hit":
+        new_move = input("What's your move? ")
+        make_move(new_move)
+    # player choices
+    if user_input.lower() == "hit":
         print()
         player.hit()
         print("You were dealt a {new}. Your current hand is ".format(new=player.current_hand[-1]) + str(player.current_hand))
+        get_sum_of_hand(player.current_hand)
         if sum_of_hand > 21:
+            print()
             print("Bust!")
             player.current_points -= current_bet
             print()
-            print("Since you're curious, the dealer's full hand was " + str(dealer.current_hand))
+            print("The dealer's hand was " + str(dealer.current_hand))
             return
-    elif input.lower() == "stand":
+    elif user_input.lower() == "stand":
+        # dealer_play()
+        # compare_to_dealer()
         return
-    elif input.lower() == "double":
+    elif user_input.lower() == "double":
         player.double()
         player.hit()
         print()
         print("You doubled your bet to {bet} and were dealt a {new}. Your current hand is ".format(bet=current_bet, new=player.current_hand[-1]) + str(player.current_hand))
 
+def dealer_play():
+    pass
+
+def leave():
+    print()
+    print("You finished with {num} points.".format(num=player.current_points))
+    print()
+    sys.exit()
 
 def new_round():
     global choices
@@ -101,17 +121,21 @@ def new_round():
     global sum_of_hand
     current_round += 1
     print()
+    if player.current_points == 0:
+        print()
+        print("You have nothing left to bet!")
+        leave()
+    print("Your current points balance is: {pts}".format(pts=player.current_points))
+    print()
     global current_bet
     current_bet = input("Type \"Leave\", or place your bet for round {num}: ".format(num=current_round))
     if current_bet.lower() == "leave":
-        print()
-        print("You finished with {num} points!".format(
-            num=player.current_points))
-        sys.exit()
+        leave()
     elif int(current_bet) > player.current_points:
         print()
         print("You can't bet more than you have! (It's for your own good.)")
-        ##### Find a way to return to input here
+        current_round -= 1
+        new_round()
     else:
         current_bet = int(current_bet)
     print()
@@ -124,7 +148,7 @@ def new_round():
     player_move = input("What's your move? ")
     make_move(player_move)
     get_sum_of_hand(player.current_hand)
-    if sum_of_hand < 21:
+    if sum_of_hand <= 21:
         get_choices()
         print()
         print("You can: " + str(choices))
@@ -141,11 +165,8 @@ def play_game():
     # Intro text
     print()
     print("Welcome to the Blackjack table! You will start with {num} points.".format(num=player.current_points))
-
-    new_round()
-    print()
-    print("Your current points balance is: {pts}".format(pts=player.current_points))
-    new_round()
+    for i in range(5):
+        new_round()
 
 
 # Space to test stuff:
@@ -156,4 +177,4 @@ def play_game():
 
 
 
-# play_game()
+play_game()
