@@ -17,6 +17,7 @@ This project allows for a single player to play the card game Blackjack via a te
 ### 2. Start the game
 - To start the game, type `python3` followed by the file location of the game.
 - For example, if you downloaded the folder to your desktop, you would type: `python3 Desktop/Blackjack-Python-Game/Blackjack-Game.py`
+- Then press "Enter/Return".
 
 <br>
 
