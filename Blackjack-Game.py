@@ -1,5 +1,6 @@
 import random
 import sys
+import math
 
 # creating 52-card deck
 ranks = ['A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K']
@@ -7,7 +8,6 @@ full_deck = []
 for i in range(4):
     full_deck += ranks
 global deck
-deck = full_deck
 
 class Player:
     def __init__(self):
@@ -17,13 +17,19 @@ class Player:
     def stand(self):
         pass
 
-    def hit(self):
+    def hit(self, hand):
         new_card = random.choice(deck)
         deck.remove(new_card)
-        self.current_hand.append(new_card)
+        hand.append(new_card)
 
-    def split(self):
-        pass
+    def split(self, hand):
+        global split_phase
+        # if 0, neither hand is active. if 1, first hand is being played. if 2, second hand is being played.
+        split_phase = 0
+        self.hit(hand)
+        self.hit(hand)
+        self.hand1 = [self.current_hand[0], self.current_hand[2]]
+        self.hand2 = [self.current_hand[1], self.current_hand[3]]
 
     def double(self):
         global current_bet
@@ -59,128 +65,271 @@ global face_cards
 face_cards = ['K', 'Q', 'J', 10]
 global result
 result = ''
+global split_phase
+split_phase = None
+global bust_count
+bust_count = 0
 
-def deal():
-    player.hit()
-    dealer.hit()
-    player.hit()
-    dealer.hit()
+def deal(player_hand, dealer_hand):
+    player.hit(player_hand)
+    dealer.hit(dealer_hand)
+    player.hit(player_hand)
+    dealer.hit(dealer_hand)
+
+    # manual hand to test split
+    # player.current_hand = [10, 'K']
+    
     print("You were dealt a {first} and a {second}".format(first=player.current_hand[0], second=player.current_hand[1]) + ", totalling to " + str(player.get_sum_of_hand(player.current_hand)) + ".")
     print("The dealer shows a {first}.".format(first=dealer.current_hand[0]))
 
-def get_choices():
+def get_choices(hand):
     global choices
     choices = ["Stand", "Hit"]
-    if (len(player.current_hand) == 2) and ((all(card in face_cards for card in player.current_hand)) or (player.current_hand[0] == player.current_hand[1])):
+    if (len(hand) == 2) and ((all(card in face_cards for card in hand)) or (hand[0] == hand[1])) and split_phase == None and current_bet <= (player.current_points / 2):
         choices.append("Split")
-    if (player.current_points >= (2*int(current_bet))) and (len(player.current_hand) == 2):
+    # currently no double allowed after split
+    if (player.current_points >= (2*int(current_bet))) and (len(hand) == 2) and split_phase == None:
         choices.append("Double")
-    else:
-        choices = ["Stand", "Hit"]
     
-def make_move(user_input):
+def make_move(user_input, hand):
     global choices
     global current_bet
+    global split_phase
+    global bust_count
+    global doubled
     # global sum_of_hand
     if user_input.title() not in choices:
         print()
-        if user_input.title() == "Double":
-            print("You don't have enough points to double your bet.")
+        if ((user_input.title() == "Double") or (user_input.title() == "Split" and current_bet > (player.current_points / 2))) and len(hand) == 2:
+            print("You don't have enough points to do that.")
             print ()
             print("----------------------------------------")
-            another_move()
+            another_move(hand)
             return
         else:
             print("You're not allowed to choose that with your current hand.")
             print()
             print("----------------------------------------")
-            another_move()
+            another_move(hand)
             return
     # player choices
     if user_input.lower() == "hit":
         print()
-        player.hit()
-        print("You were dealt a {new}. Your current hand is ".format(bet=current_bet, new=player.current_hand[-1]) + str(player.current_hand) + ", totalling to " + str(player.get_sum_of_hand(player.current_hand)) + ".")
-        player.get_sum_of_hand(player.current_hand)
+        player.hit(hand)
+        print("You were dealt a {new}. Your current hand is ".format(new=hand[-1]) + str(hand) + ", totalling to " + str(player.get_sum_of_hand(hand)) + ".")
+        player.get_sum_of_hand(hand)
         if player.sum_of_hand > 21:
-            print()
-            print("Bust!")
-            player.current_points -= current_bet
-            print()
-            print("The dealer's hand was " + str(dealer.get_sum_of_hand(dealer.current_hand)) + ", totalling to " + str(dealer.get_sum_of_hand(dealer.current_hand)) + ".")
-            return
+            # if playing first hand of a split
+            if split_phase == 1:
+                print()
+                print("Bust!")
+                bust_count += 1
+                # player.current_points -= math.floor(current_bet / 2)
+                print()
+                return
+            # if playing second hand of a split
+            if split_phase == 2:
+                print()
+                print("Bust!")
+                bust_count += 1
+                print()
+                dealer_play(dealer.current_hand)
+                compare_to_dealer()
+                return
+            bust()
+            bust_count += 1
         else:
-            another_move()
+            another_move(hand)
     elif user_input.lower() == "stand":
-        player.get_sum_of_hand(player.current_hand)
-        dealer_play()
+        player.get_sum_of_hand(hand)
+        if split_phase == 1:
+            return
+        if split_phase == 2:
+            dealer_play(dealer.current_hand)
+            compare_to_dealer()
+            return
+        dealer_play(dealer.current_hand)
         compare_to_dealer()
         return
     elif user_input.lower() == "double":
         player.double()
-        player.hit()
+        player.hit(hand)
         print()
-        print("You doubled your bet to {bet} and were dealt a {new}.".format(bet=current_bet, new=player.current_hand[-1]))
-        print("Your current hand is " + str(player.current_hand) + ", totalling to " + str(player.get_sum_of_hand(player.current_hand)) + ".")
-        # reused code from above :(
+        print("You doubled your bet and were dealt a {new}.".format(new=hand[-1]))
+        print()
+        print("Your current hand is " + str(hand) + ", totalling to " + str(player.get_sum_of_hand(hand)) + ".")
         if player.sum_of_hand > 21:
-            print()
-            print("Bust!")
-            player.current_points -= current_bet
-            print()
-            print("The dealer's hand was: " + str(dealer.current_hand) + ", totalling to " + str(dealer.get_sum_of_hand(dealer.current_hand)) + ".")
-            return
+            if split_phase == 1:
+                print()
+                print("Bust!")
+                print()
+                bust_count += 1
+                doubled[0] = True
+                return
+            bust()
         else:
-            dealer_play()
+            dealer_play(dealer.current_hand)
             compare_to_dealer()
             return
+    elif user_input.lower() == "split":
+        current_bet *= 2
+        player.split(hand)
+        print()
+        print("Your first hand is {first} and your second hand is {second},".format(first=str(player.hand1), second=player.hand2))
+        print("each totalling to {first_sum} and {second_sum}, respectively.".format(first_sum=player.get_sum_of_hand(player.hand1), second_sum=player.get_sum_of_hand(player.hand2)))
+        print()
+        split_phase = 1
+        print("For your first hand, " + str(player.hand1) + ":")
+        another_move(player.hand1)
+        print()
+        split_phase = 2
+        print("For your second hand, " + str(player.hand2) + ":")
+        another_move(player.hand2)
+        return
 
-def another_move():
+def bust():
+    print()
+    print("Bust!")
+    player.current_points -= current_bet
+    print()
+    print("The dealer's hand was: " + str(dealer.current_hand) + ", totalling to " + str(dealer.get_sum_of_hand(dealer.current_hand)) + ".")
+    return
+        
+
+def another_move(hand):
     global player_move
-    get_choices()
+    get_choices(hand)
     print()
     print("You can: " + str(choices))
     print()
     player_move = input("What's your move? ")
     print()
     print("----------------------------------------")
-    make_move(player_move)
+    make_move(player_move, hand)
     return
 
 
-def dealer_play():
+def dealer_play(hand):
+    global dealer_bust
     dealer_sum = dealer.get_sum_of_hand(dealer.current_hand)
     if dealer_sum < 17:
-        dealer.hit()
-        dealer_play()
+        dealer.hit(hand)
+        dealer_play(hand)
     elif dealer_sum >= 17 and dealer_sum <= 21:
         dealer.stand()
-        dealer.get_sum_of_hand(dealer.current_hand)
+        # dealer.get_sum_of_hand(dealer.current_hand)
     elif dealer_sum > 21:
-        print()
-        print("The dealer busted with a hand totalling to " + str(dealer_sum) + "! You win this round!")
-        player.current_points += current_bet
+        dealer_bust = True
+        # player.current_points += current_bet
 
 def compare_to_dealer():
-    if dealer.sum_of_hand <= 21:
-        print()
-        print("The dealer's hand was: " + str(dealer.current_hand) + ", totalling to " + str(dealer.sum_of_hand) + ".")
-        print()
-        if dealer.sum_of_hand > player.sum_of_hand:
-            print("You lose this round!")
-            player.current_points -= current_bet
-        elif dealer.sum_of_hand < player.sum_of_hand:
-            print("You win this round!")
-            player.current_points += current_bet
-        elif dealer.sum_of_hand == player.sum_of_hand:
-            print("It's a push, no points are exchanged.")
+    dealer.sum_of_hand = dealer.get_sum_of_hand(dealer.current_hand)
+    player_sum_1 = player.get_sum_of_hand(player.hand1)
+    player_sum_2 = player.get_sum_of_hand(player.hand2)
+    player_sum_single_hand = player.get_sum_of_hand(player.current_hand)
+    # print()
+    # print("The dealer's hand was: " + str(dealer.current_hand) + ", totalling to " + str(dealer.sum_of_hand) + ".")
+    # print()
+    if split_phase == None:
+        if bust_count == 0:
+            print()
+            print("The dealer's hand was: " + str(dealer.current_hand) + ", totalling to " + str(dealer.sum_of_hand) + ".")
+            print()
+            if dealer_bust == True:
+                print("The dealer busts!")
+                print()
+                print("You win this round!")
+                player.current_points += current_bet
+            elif player_sum_single_hand > dealer.sum_of_hand:
+                print("You win this round!")
+                player.current_points += current_bet
+            elif player_sum_single_hand < dealer.sum_of_hand:
+                print("You lose this round.")
+                player.current_points -= current_bet
+            else:
+                print("It's a push, no points are exchanged.")
+        else:
+            return # single-hand bust is taken care of in the bust() function
     else:
-        return
+        if bust_count == 0:
+            print()
+            print("The dealer's hand was: " + str(dealer.current_hand) + ", totalling to " + str(dealer.sum_of_hand) + ".")
+            print()
+            if dealer_bust == True:
+                print("The dealer busts!")
+                print()
+                print("You win this round!")
+                player.current_points += current_bet
+            elif player_sum_1 > dealer.sum_of_hand and player_sum_2 > dealer.sum_of_hand:
+                print("You win both hands!")
+                player.current_points += current_bet
+            elif player_sum_1 < dealer.sum_of_hand and player_sum_2 < dealer.sum_of_hand:
+                print("You lose both hands.")
+                player.current_points -= current_bet
+            elif player_sum_1 > dealer.sum_of_hand and player_sum_2 < dealer.sum_of_hand:
+                print("You won your first hand but lost your second.")
+                print()
+                print("No points are exchanged.")
+            elif player_sum_1 < dealer.sum_of_hand and player_sum_2 > dealer.sum_of_hand:
+                print("You lost your first hand but won your second.")
+                print()
+                print("No points are exchanged.")
+        elif bust_count == 1:
+            print()
+            print("The dealer's hand was: " + str(dealer.current_hand) + ", totalling to " + str(dealer.sum_of_hand) + ".")
+            print()
+            if (player_sum_1 < dealer.sum_of_hand or player_sum_2 < dealer.sum_of_hand) and dealer_bust == False:
+                print("You lose both hands.")
+                player.current_points -= current_bet
+            elif player_sum_1 <= 21 and dealer_bust == True:
+                print("The dealer busts!")
+                print()
+                print("You won your first hand but lost your second.")
+                print()
+                print("No points are exchanged.")
+            elif player_sum_2 <= 21 and dealer_bust == True:
+                print("The dealer busts!")
+                print()
+                print("You lost your first hand but won your second.")
+                print()
+                print("No points are exchanged.")
+            elif player_sum_1 == dealer.sum_of_hand and dealer_bust == False:
+                print("Your first hand resulted in a push and you lost your second hand.")
+                player.current_points -= (current_bet / 2)
+            elif player_sum_2 == dealer.sum_of_hand and dealer_bust == False:
+                print("You lost your first hand and your second resulted in a push.")
+                player.current_points -= (current_bet / 2)
+            elif player_sum_1 > dealer.sum_of_hand and dealer_bust == False:
+                if player_sum_1 > 21:
+                    print("You lost your first hand but won your second.")
+                    print()
+                    print("No points are exchanged.")
+                    return
+                print("You won your first hand but lost your second.")
+                print()
+                print("No points are exchanged.")
+            elif player_sum_2 > dealer.sum_of_hand and dealer_bust == False:
+                if player_sum_2 > 21:
+                    print("You won your first hand but lost your second.")
+                    print()
+                    print("No points are exchanged.")
+                    return
+                print("You lost your first hand but won your second.")
+                print()
+                print("No points are exchanged.")
+        elif bust_count == 2:
+            print()
+            print("You lose both hands.")
+            print()
+            print("The dealer's hand was: " + str(dealer.current_hand) + ", totalling to " + str(dealer.sum_of_hand) + ".")
+            player.current_points -= current_bet
 
 
 def leave():
     print()
     print("You finished with {num} points.".format(num=player.current_points))
+    print()
+    print("----------------------------------------")
     print()
     sys.exit()
 
@@ -188,10 +337,20 @@ def new_round():
     global choices
     global current_round
     global deck
-    #global sum_of_hand
+    global dealer_bust
+    global bust_count
+    global split_phase
+    global doubled
+    # doubled shows which hand if any has been doubled. [0] refers to if the player has doubled their only hand. [1] and [2] refer to if the player has split their hand and if they've doubled either.
+    doubled = [False, False, False]
     player.current_hand = []
     dealer.current_hand = []
-    deck = full_deck
+    player.hand1 = []
+    player.hand2 = []
+    bust_count = 0
+    dealer_bust = False
+    split_phase = None
+    deck = full_deck[:]
     current_round += 1
     print()
     if player.current_points == 0:
@@ -229,26 +388,45 @@ def new_round():
         current_round -= 1
         new_round()
         return
+    elif current_bet < 0:
+        print()
+        print("You can't bet a negative number, I see what you're trying to do.")
+        current_round -= 1
+        new_round()
+        return
     print()
-    deal()
-    another_move()
+    deal(player.current_hand, dealer.current_hand)
+    if player.get_sum_of_hand(player.current_hand) == 21:
+        if dealer.get_sum_of_hand(dealer.current_hand) != 21:
+            print()
+            print("You got blackjack!")
+            print()
+            print("You win 1.5 times your bet.")
+            player.current_points += math.floor(current_bet * 1.5)
+        if dealer.get_sum_of_hand(dealer.current_hand) == 21:
+            print()
+            print("You got blackjack, but so did the dealer!")
+            print()
+            print("No points are exchanged.")
+    else:
+        another_move(player.current_hand)
 
 
 dealer = Dealer()
 player = Player()
 
-# Start game
+
 def play_game():
     # Intro text
     print()
     print("Welcome to the Blackjack table! You will start with {num} points.".format(num=player.current_points))
     print("The default length of the game is 10 rounds, but you can leave at any time between rounds.")
-    for i in range(5):
+    # num of rounds
+    for i in range(10):
         new_round()
+    print()
+    print("----------------------------------------")
     leave()
-
-
-# Space to test stuff:
 
 
 play_game()

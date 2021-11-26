@@ -2,8 +2,55 @@ The game will be the card game Blackjack, played via user input in a terminal.
 
 To-Do:
     - add what happens if player gets blackjack (21 at start)
-    - add "split" logic
     - should the dealer play even if the user busts?
+    - add insurance option?
+    - add double functionality after a split
+
+compare_to_dealer logic:
+    if split:
+        You win both hands if:
+            !- dealer busts AND you don't
+            !- both your sums are greater than the dealer's AND you don't bust
+
+        You lose both hands if:
+            !- both hands bust
+            !- both sums are less than dealer's AND dealer doesn't bust
+            !- one hand busts AND the other is less than dealer's AND dealer doesn't bust
+        
+        You lose one hand if:
+            !- one hand busts AND the other doesn't AND dealer busts
+            !- one hand busts AND the other sums greater than dealer AND dealer doesn't bust
+            !- one sum is less than dealer AND one is greater than dealer AND dealer doesn't bust AND you don't bust
+
+    DON'T FORGET WHAT HAPPENS IF ONE OR BOTH HANDS ARE EQUAL TO DEALER
+
+    if single hand:
+        You win if:
+            - dealer busts AND you don't
+            - your sum is greater than dealer's AND you don't bust
+
+        You lose if:
+            - you bust
+            - your sum is less than dealer's AND dealer doesn't bust
+
+
+Conceptual questions:
+    - Use of global variables
+    - What should go within a function, what should stay out?
+
+Notable Rules:
+    - No double after split
+    - No surrender
+
+possible results of a split:
+    - both bust
+    - one busts, one loses to dealer
+    - both lose to dealer
+    - one busts, one beats dealer
+    - both beat dealer
+
+
+
 
 There will be a dealer and a single user.
 At each decision point in the game, the user will be asked to input their choice of these, depending on the hand:
