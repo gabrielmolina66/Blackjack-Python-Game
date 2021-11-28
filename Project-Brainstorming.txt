@@ -1,7 +1,6 @@
 The game will be the card game Blackjack, played via user input in a terminal.
 
 To-Do:
-    - add what happens if player gets blackjack (21 at start)
     - should the dealer play even if the user busts?
     - add insurance option?
     - add double functionality after a split
